@@ -1,0 +1,2 @@
+#Enter this in correct directory to convert png's to a gif
+convert -delay 15 -loop 0 *.png myimage.gif
