@@ -1,0 +1,1 @@
+for file in *.nc; do ncrename -d time,tstep $file; done

@@ -50,14 +50,6 @@ def extract_vars_nc(data_nc, var_name):
     return lats, lons, var, time
 
 
-def extract_vars_cci_nc(data_nc, var_name):
-    lats = data_nc.variables['lat'][:]
-    lons = data_nc.variables['lon'][:]
-    var = data_nc.variables[var_name]
-    time = data_nc.variables['time']
-    return lats, lons, var, time
-
-
 def nc_var_slice(var, t_step, layer=0):
     if len(var.shape) == 4:
         var_slice = var[t_step, layer, :, :]
@@ -232,10 +224,7 @@ def save_many_ghana(f_name, var_name, t_step_list, fig_path='None', layer=0, col
         os.makedirs(fig_path)
     data = open_nc(f_name)
     #extract variables from netcdf dataset
-    if var_name == 'sm':
-        lats, lons, var, time = extract_vars_cci_nc(data, var_name)
-    else:
-        lats, lons, var, time = extract_vars_nc(data, var_name)
+    lats, lons, var, time = extract_vars_nc(data, var_name)
     #slice requested var at correct time and layer
     var_slice, v_max = nc_var_slice_list(var, layer)
     v_r = var_slice[:]
@@ -245,8 +234,6 @@ def save_many_ghana(f_name, var_name, t_step_list, fig_path='None', layer=0, col
     ax = fig.add_axes([0.1,0.1,0.8,0.8])
     #Create basemap instance
     m = draw_map()
-    if vmax != 'None':
-        v_max = vmax
     #maks oceans for requested var, return x, y coords for basemap instance
     if var_name == 'rainfall':
         clevs = [0, 0.1, 1, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, ]
@@ -266,19 +253,7 @@ def save_many_ghana(f_name, var_name, t_step_list, fig_path='None', layer=0, col
         cbar = m.colorbar(cs, location='bottom', pad="5%")
         cbar.set_label('m3 m-3')
         #cbar.formatter.set_powerlimits((0, 0))
-        clevs = np.arange(0, 1.25, 0.25)
-        cbar.set_ticks(clevs,)
-        cbar.ax.set_xticklabels(clevs, rotation=45)
-    elif var_name == 'sm':
-        cs = m.imshow(v_r[0], cmap=colormap,
-                      vmax=v_max, vmin=0, interpolation="none")
-        # add colorbar.
-        cbar = m.colorbar(cs, location='bottom', pad="5%")
-        cbar.set_label('m3 m-3')
-        #cbar.formatter.set_powerlimits((0, 0))
-        clevs = np.arange(0, 1.25, 0.25)
-        cbar.set_ticks(clevs,)
-        cbar.ax.set_xticklabels(clevs, rotation=45)
+        cbar.update_ticks()
     elif vmax == 'None':
         cs = m.imshow(v_r[0], cmap=colormap,
                       vmax=v_max, vmin=0, interpolation="none")
@@ -301,18 +276,12 @@ def save_many_ghana(f_name, var_name, t_step_list, fig_path='None', layer=0, col
         str_time = d_time.strftime('%Y_%m_%d')
         if var_name == 'rainfall':
             cs.set_data(v_r[t]*86400)
-            plt.title(dat_name + ' rainfall over Ghana ' + str_time)
-        elif var_name == 'smcl':
-            cs.set_data(v_r[t]/depths[layer])
-            plt.title(dat_name + ' smcl at depth ' + labels[layer] + ' over Ghana ' + str_time)
-        elif var_name == 'sm':
-            cs.set_data(v_r[t])
-            plt.title(dat_name + ' smcl over Ghana ' + str_time)
+
         else:
             cs.set_data(v_r[t])
-            plt.title(dat_name + var.long_name + ' over Ghana ' + str_time)
         plt.draw()
         # add title
+        plt.title(dat_name+var.long_name+' over Ghana '+str_time)
         ram = cStringIO.StringIO()
         fig.savefig(ram, format='png', bbox_inches='tight')
         ram.seek(0)

@@ -72,11 +72,11 @@ class DisaggregateTime:
                 if np.sum(self.wfd_rain[self.hour_idx_arr[i]:self.hour_idx_arr[i + 1], lat_idx, lon_idx]) is np.ma.masked:
                     print 'masked'
                     continue
-                while np.sum(self.wfd_rain[self.hour_idx_arr[i]:self.hour_idx_arr[i+1],lat_idx, lon_idx]) == 0.0:
+                while np.sum(self.wfd_rain[self.hour_idx_arr[i]:self.hour_idx_arr[i+1], lat_idx, lon_idx]) == 0.0:
                     i += 1
-                rain_arr = self.wfd_rain[self.hour_idx_arr[i]:self.hour_idx_arr[i+1],lat_idx, lon_idx] \
+                rain_arr = self.wfd_rain[self.hour_idx_arr[i]:self.hour_idx_arr[i+1], lat_idx, lon_idx] \
                             / np.sum(self.wfd_rain[self.hour_idx_arr[i]:self.hour_idx_arr[i + 1], lat_idx, lon_idx])
-                print rain_arr
+                print np.sum(rain_arr)
                 i = 0
                 for i in xrange(len(self.hour_idx_arr)):
                     hr_idx1 = self.hour_idx_arr[i]
@@ -94,18 +94,18 @@ class DisaggregateTime:
                             / np.sum(self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx])
                         # print self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx]
                         self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx] = \
-                            self.tam_rain[tam_idx, lat_idx, lon_idx]/86400. * rain_arr
-                        # print self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx]
+                            self.tam_rain[tam_idx, lat_idx, lon_idx]*8./86400. * rain_arr  # x 8/86400 same a 1/10800
+                            # 10800 number of secs in 3hrs
                     elif np.sum(self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx]) == 0.0:
                         print 'no wfdei rain today, using stored rain array'
                         tam_idx = nc.date2index(self.wfd_dates[hr_idx1] - dt.timedelta(hours=6), self.tam_time)
                         # print self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx]
                         try:
                             self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx] = \
-                                self.tam_rain[tam_idx, lat_idx, lon_idx]/86400. * rain_arr
+                                self.tam_rain[tam_idx, lat_idx, lon_idx]*8./86400. * rain_arr
                         except ValueError:
                             self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx] = \
-                                self.tam_rain[tam_idx, lat_idx, lon_idx]/86400. * rain_arr[0:6]
+                                self.tam_rain[tam_idx, lat_idx, lon_idx]*8./86400. * rain_arr[0:6]
                         # print self.wfd_rain[hr_idx1:hr_idx2, lat_idx, lon_idx]
                     else:
                         continue
