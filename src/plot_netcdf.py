@@ -228,6 +228,7 @@ def loop_ghana_plot(f_name, var_name, t_step_list, layer=0, save_fig=0, fig_path
 
 
 def save_many_ghana(f_name, var_name, t_step_list, fig_path='None', layer=0, colormap='YlGnBu', vmax='None', dat_name=None): #'Blues' for rain?
+    sns.set_context('paper', font_scale=1.4, rc={'lines.linewidth': .8, 'lines.markersize': 1.})
     if not os.path.exists(fig_path):
         os.makedirs(fig_path)
     data = open_nc(f_name)
@@ -411,6 +412,107 @@ def gh_spatial_mean_time_plot(tam_nc, wfd_nc, var_name, level='none', which_nc='
             ax.plot(times, np.nanmean(wv[:, level, :, :]/depths[level], axis=(1, 2)), label='wfdei', color=palette[0])
             ax.plot(times, np.nanmean(tv[:, level, :, :]/depths[level], axis=(1, 2)), label='tamsat', color=palette[2])
         plt.ylabel('Volumetric soil water content (m3 m-3)')
+    plt.gcf().autofmt_xdate()
+    plt.legend(loc=2)
+    #plt.show()
+    return fig
+
+
+def gh_cci_tam_wfd(tam_nc, wfd_nc, cci_nc, var_name, level='none'):
+    sns.set_context('poster', font_scale=1.2, rc={'lines.linewidth': 1, 'lines.markersize': 10})
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
+    sns.set_style('whitegrid')
+    palette = sns.color_palette("colorblind", 11)
+    tam_dat = open_nc(tam_nc)
+    wfd_dat = open_nc(wfd_nc)
+    cci_dat = open_nc(cci_nc)
+    lats, lons, tam_var, time = extract_vars_nc(tam_dat, var_name)
+    lats, lons, wfd_var, time = extract_vars_nc(wfd_dat, var_name)
+    lats, lons, cci_var, time = extract_vars_cci_nc(cci_dat, 'sm')
+    times = nc.num2date(time[:], time.units)
+    wv = wfd_var[:]
+    tv = tam_var[:]
+    cv = cci_var[:]
+    wv[wv>1e18] = np.nan
+    tv[tv>1e18] = np.nan
+    cv[cv > 1e18] = np.nan
+    depths = [100, 250, 650, 2000]
+    #depths = [150, 350, 650, 2000]
+    labels = ['0 - 0.1m', '0.1 - 0.35m', '0.35 - 1m', '1 - 3m']
+    if level in [0,1,2,3]:
+        ax.plot(times, np.nanmean(wv[0:365, level, :, :]/depths[level], axis=(1, 2)), label='wfdei', color=palette[0])
+        ax.plot(times, np.nanmean(tv[0:365, level, :, :]/depths[level], axis=(1, 2)), label='tamsat', color=palette[2])
+        ax.plot(times, np.nanmean(cv[:, :, :], axis=(1, 2)), 'o', label='esa cci', color=palette[3])
+    plt.ylabel('Volumetric soil water content (m3 m-3)')
+    plt.gcf().autofmt_xdate()
+    plt.legend(loc=2)
+    #plt.show()
+    return fig
+
+
+def gh_cci_tam_wfd2(tam_nc, wfd_nc, cci_nc, var_name, level='none'):
+    sns.set_context('poster', font_scale=1.2, rc={'lines.linewidth': 1, 'lines.markersize': 10})
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
+    sns.set_style('whitegrid')
+    palette = sns.color_palette("colorblind", 11)
+    tam_dat = open_nc(tam_nc)
+    wfd_dat = open_nc(wfd_nc)
+    cci_dat = open_nc(cci_nc)
+    lats, lons, cci_var, time = extract_vars_cci_nc(cci_dat, 'sm')
+    lats, lons, tam_var, time = extract_vars_nc(tam_dat, var_name)
+    lats, lons, wfd_var, time = extract_vars_nc(wfd_dat, var_name)
+    times = nc.num2date(time[:], time.units)
+    print len(times)
+    wv = wfd_var[:]
+    tv = tam_var[:]
+    cv = cci_var[:]
+    print len(times)
+    print len(cv)
+    wv[wv>1e18] = np.nan
+    tv[tv>1e18] = np.nan
+    cv[cv > 1e18] = np.nan
+    depths = [100, 250, 650, 2000]
+    #depths = [150, 350, 650, 2000]
+    labels = ['0 - 0.1m', '0.1 - 0.35m', '0.35 - 1m', '1 - 3m']
+    if level in [0,1,2,3]:
+        ax.plot(times, np.nanmean(wv[:, level, :, :], axis=(1, 2)), label='wfdei', color=palette[0])
+        ax.plot(times, np.nanmean(tv[:, level, :, :], axis=(1, 2)), label='tamsat', color=palette[2])
+        ax.plot(times, np.nanmean(cv[0:2190, :, :], axis=(1, 2))*150, 'o', label='esa cci', color=palette[3])
+    plt.ylabel('smcl (kg m-2)')
+    plt.gcf().autofmt_xdate()
+    plt.legend(loc=2)
+    #plt.show()
+    return fig
+
+
+
+def gh_cci_tam_wfd_point(tam_nc, wfd_nc, cci_nc, var_name, x, y, level='none'):
+    sns.set_context('poster', font_scale=1.2, rc={'lines.linewidth': 1, 'lines.markersize': 10})
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(15, 5))
+    sns.set_style('whitegrid')
+    palette = sns.color_palette("colorblind", 11)
+    tam_dat = open_nc(tam_nc)
+    wfd_dat = open_nc(wfd_nc)
+    cci_dat = open_nc(cci_nc)
+    lats, lons, cci_var, time = extract_vars_cci_nc(cci_dat, 'sm')
+    lats, lons, tam_var, time = extract_vars_nc(tam_dat, var_name)
+    lats, lons, wfd_var, time = extract_vars_nc(wfd_dat, var_name)
+    times = nc.num2date(time[:], time.units)
+    wv = wfd_var[:]
+    tv = tam_var[:]
+    cv = cci_var[:]
+    print len(wv[:, level, x, y])
+    print len(times)
+    wv[wv>1e18] = np.nan
+    tv[tv>1e18] = np.nan
+    cv[cv > 1e18] = np.nan
+    depths = [100, 250, 650, 2000]
+    labels = ['0 - 0.1m', '0.1 - 0.35m', '0.35 - 1m', '1 - 3m']
+    if level in [0,1,2,3]:
+        ax.plot(times, wv[:, level, x, y]/depths[level], label='wfdei', color=palette[0])
+        ax.plot(times, tv[:, level, x, y]/depths[level], label='tamsat', color=palette[2])
+        ax.plot(times, cv[0:1825, x, y], 'o', label='esa cci', color=palette[3])
+    plt.ylabel('Volumetric soil water content (m3 m-3)')
     plt.gcf().autofmt_xdate()
     plt.legend(loc=2)
     #plt.show()
